@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum OrderStatusEnums {
+  PORCESSING
+  DELIVERING
+  DELIVERED
+}
+enum Role {
+  USER
+  ADMIN
+}
+enum Categoty {
+  SUSHI
+  MEAT
+  BURGER
+  CAKE
+  VEGETABLE
+  PIZZA
+}
+model User {
+  id                  Int             @id @default(autoincrement())
+  email               String          @unique
+  password            String
+  name                String
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+  ////////////////////////////////
+  orders              Order[]
+  owner               Owner?
+  role                Role            @default(USER)
+}
+model Owner {
+  id                  Int             @id @default(autoincrement())
+  user_id             Int             @unique
+  ///////////////////////
+  user                User            @relation(fields: [user_id], references: [id])
+  resturant           Restaurant?
+}
+model Restaurant {
+  id                  Int             @id @default(autoincrement())
+  owner_id            Int             @unique       
+  name                String          @unique
+  //////////////////////////
+  products            Product[]
+  owner               Owner           @relation(fields: [owner_id], references: [id])
+}
+model Product {
+  id                  Int             @id  @default(autoincrement()) @unique
+  restaurant_id       Int             
+  name                String
+  category           Categoty
+  description         String
+  thumbnail_photo_url String
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+  deleted_at          DateTime?
+  /////////////////////////////
+  restaurant          Restaurant      @relation(fields: [restaurant_id], references: [id])
+  orderItems          OrderItem[]
+}
+model Order {
+  id                  Int             @id @unique @default(autoincrement())
+  user_id             Int
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+  ///////////////////////////////
+  orderItems          OrderItem[]
+  user                User            @relation(fields: [user_id], references: [id])
+}
+model OrderItem {
+  id                    Int           @id @default(autoincrement())
+  order_id              Int
+  product_id            Int           
+  quantity              Int
+  item_price            Float
+  final_price           Float
+  created_at            DateTime      @default(now())
+  updated_at            DateTime      @updatedAt
+  deleted_at            DateTime?
+  //////////////////////////////////
+  order                 Order         @relation(fields: [order_id], references: [id])
+  product               Product       @relation(fields: [product_id], references: [id])
+}
